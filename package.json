@@ -49,5 +49,9 @@
     "@opencode/plugin": { "optional": true },
     "@opentui/core": { "optional": true },
     "@opentui/solid": { "optional": true }
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   }
 }
