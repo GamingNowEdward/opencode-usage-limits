@@ -1,0 +1,53 @@
+{
+  "name": "opencode-usage-limits",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Show OpenCode Go and ClinePass subscription usage (5-hour / weekly / monthly) in the OpenCode TUI sidebar.",
+  "license": "MIT",
+  "author": "GamingNowEdward",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "tui",
+    "usage",
+    "quota",
+    "sidebar",
+    "opencode-go",
+    "clinepass"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GamingNowEdward/opencode-usage-limits.git"
+  },
+  "homepage": "https://github.com/GamingNowEdward/opencode-usage-limits#readme",
+  "bugs": {
+    "url": "https://github.com/GamingNowEdward/opencode-usage-limits/issues"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./server": "./index.ts",
+    "./tui": "./tui.tsx"
+  },
+  "files": [
+    "index.ts",
+    "tui.ts",
+    "tui.tsx",
+    "core.ts",
+    "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "CHANGELOG.en.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@opencode/plugin": ">=2.0.0",
+    "@opentui/core": ">=0.4.5",
+    "@opentui/solid": ">=0.4.5",
+    "solid-js": ">=1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opencode/plugin": { "optional": true },
+    "@opentui/core": { "optional": true },
+    "@opentui/solid": { "optional": true }
+  }
+}
