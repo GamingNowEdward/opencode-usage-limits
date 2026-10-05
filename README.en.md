@@ -1,5 +1,10 @@
 # usage-limits
 
+[![npm version](https://img.shields.io/npm/v/opencode-usage-limits?color=blue)](https://www.npmjs.com/package/opencode-usage-limits)
+[![npm downloads](https://img.shields.io/npm/dw/opencode-usage-limits)](https://www.npmjs.com/package/opencode-usage-limits)
+[![license](https://img.shields.io/npm/l/opencode-usage-limits)](./LICENSE)
+[![OpenCode v2](https://img.shields.io/badge/OpenCode-v2-6E56CF)](https://opencode.ai/v2/docs/)
+
 > Show your subscription usage limits (5-hour / weekly / monthly) in the OpenCode sidebar.
 
 [简体中文](./README.md) · [English](./README.en.md)
@@ -44,6 +49,12 @@ Monthly                         60%
 | `cline-pass` | [ClinePass](https://docs.cline.bot/getting-started/clinepass) | `GET https://api.cline.bot/api/v1/users/me/plan/usage-limits` | Yes (plan caps read live from `/users/me/plan`) |
 
 > Cline's public documentation is at [Cline API](https://docs.cline.bot/api/overview).
+
+## Requirements
+
+- [OpenCode](https://opencode.ai/v2/docs/) **v2.0.0 or newer**
+- An **OpenCode Go** or **ClinePass** subscription connected via `/connect`
+- Network access to the matching usage endpoint (see the table above)
 
 ## Install
 

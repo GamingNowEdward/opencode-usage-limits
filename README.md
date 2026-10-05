@@ -1,5 +1,10 @@
 # usage-limits
 
+[![npm version](https://img.shields.io/npm/v/opencode-usage-limits?color=blue)](https://www.npmjs.com/package/opencode-usage-limits)
+[![npm downloads](https://img.shields.io/npm/dw/opencode-usage-limits)](https://www.npmjs.com/package/opencode-usage-limits)
+[![license](https://img.shields.io/npm/l/opencode-usage-limits)](./LICENSE)
+[![OpenCode v2](https://img.shields.io/badge/OpenCode-v2-6E56CF)](https://opencode.ai/v2/docs/)
+
 > 在 OpenCode 右侧侧边栏实时显示订阅方案的用量限额（5 小时 / 周 / 月）。
 
 [简体中文](./README.md) · [English](./README.en.md)
@@ -43,6 +48,12 @@ Monthly                         60%
 | `cline-pass` | [ClinePass](https://docs.cline.bot/getting-started/clinepass) | `GET https://api.cline.bot/api/v1/users/me/plan/usage-limits` | 是（从 `/users/me/plan` 实时读取套餐上限） |
 
 > Cline 的公开文档见 [Cline API](https://docs.cline.bot/api/overview)。
+
+## 要求
+
+- [OpenCode](https://opencode.ai/v2/docs/) **v2.0.0 或更高版本**
+- 已通过 `/connect` 连接 **OpenCode Go** 或 **ClinePass** 订阅
+- 能访问对应用量接口的网络环境（端点见上方数据源表）
 
 ## 安装
 

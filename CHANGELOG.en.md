@@ -6,6 +6,14 @@ All notable changes to `usage-limits` are documented here. The format is based o
 
 [简体中文](./CHANGELOG.md) · [English](./CHANGELOG.en.md)
 
+## 0.2.1 - 2026-10-06
+
+### Docs
+
+- Added npm version / downloads / license / OpenCode version badges to the README.
+- Added a "Requirements" section (OpenCode v2.0.0+, a connected subscription, reachable usage endpoints).
+- This release is the first automated publish through GitHub Actions + OIDC trusted publishing.
+
 ## 0.2.0 - 2026-10-06
 
 ### Added

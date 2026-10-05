@@ -4,6 +4,14 @@
 
 [简体中文](./CHANGELOG.md) · [English](./CHANGELOG.en.md)
 
+## 0.2.1 - 2026-10-06
+
+### 文档
+
+- README 增加 npm 版本 / 下载量 / 许可 / OpenCode 版本徽章。
+- README 新增「要求」小节（OpenCode v2.0.0+、已连接订阅、网络可达用量接口）。
+- 本次为通过 GitHub Actions + OIDC 可信发布的首次自动发布验证。
+
 ## 0.2.0 - 2026-10-06
 
 ### 新增

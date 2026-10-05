@@ -1,6 +1,6 @@
 {
   "name": "opencode-usage-limits",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Show OpenCode Go and ClinePass subscription usage (5-hour / weekly / monthly) in the OpenCode TUI sidebar.",
   "license": "MIT",
