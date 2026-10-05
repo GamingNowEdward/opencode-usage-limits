@@ -1,0 +1,63 @@
+name: Publish to npm
+
+# Publishes with npm Trusted Publishing (OIDC): no long-lived npm token is
+# stored in this repository.
+#
+# One-time setup on npmjs.com (after the package exists):
+#   Package -> Settings -> Trusted Publisher -> GitHub Actions
+#     Organization or user : GamingNowEdward
+#     Repository           : opencode-usage-limits
+#     Workflow filename    : publish.yml
+#     Allowed actions      : allow "npm publish"
+#
+# Then releasing is just:
+#   npm version patch --no-git-tag-version   # or edit package.json
+#   git commit -am "chore: release vX.Y.Z"
+#   git tag vX.Y.Z && git push origin main --tags
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Required: lets the runner mint the OIDC token that npm exchanges for a
+  # short-lived publish credential.
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          # Never cache in release builds.
+          package-manager-cache: false
+
+      - name: Verify the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          pkg="$(node -p "require('./package.json').version")"
+          tag="${GITHUB_REF_NAME#v}"
+          echo "package.json version: $pkg"
+          echo "tag version:          $tag"
+          if [ "$pkg" != "$tag" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg"
+            exit 1
+          fi
+
+      - name: Publish
+        run: npm publish

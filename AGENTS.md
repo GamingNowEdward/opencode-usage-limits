@@ -77,6 +77,26 @@ opencode service restart
 
 Log: `~/.local/share/opencode/log/opencode.log`, filter by `role=cli` and `plugin`.
 
+## Release
+
+Published to npm as `opencode-usage-limits` via **trusted publishing (OIDC)** — no npm token is stored
+in the repository.
+
+1. Bump `version` in `package.json` and turn the CHANGELOG's current section into a new dated one
+   (`CHANGELOG.md` **and** `CHANGELOG.en.md`).
+2. Commit, then tag and push:
+
+   ```sh
+   git tag vX.Y.Z
+   git push origin main --tags
+   ```
+
+3. `.github/workflows/publish.yml` checks the tag against `package.json`, then runs `npm publish`
+   over OIDC. Provenance is generated automatically.
+
+Manual publishing still works (`npm publish --otp=…`), but **granular access tokens with bypass-2FA
+no longer publish**; npm is retiring that path (target January 2027) in favour of trusted publishing.
+
 ## Change notes
 
 - **Saving a plugin file hot reloads it.** OpenCode watches the local plugin path configured in
