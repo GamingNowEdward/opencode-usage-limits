@@ -36,7 +36,9 @@ export const PROVIDERS: Record<string, ProviderConfig> = {
     title: "OpenCode Go",
     baseUrl: "https://opencode.ai/zen/go/v1",
     path: "/usage",
-    limits: { hour5: 12, weekly: 30, monthly: 60 },
+    // No dollar budgets: the usage API only reports percentages, and the
+    // per-model allowances on the pricing page are reference information shown
+    // separately (see GO_MODEL_ALLOWANCE).
   },
   "cline-pass": {
     id: "cline-pass",
@@ -45,6 +47,57 @@ export const PROVIDERS: Record<string, ProviderConfig> = {
     path: "/users/me/plan/usage-limits",
     planPath: "/users/me/plan",
   },
+}
+
+export type PlanTier = "go" | "plus"
+
+/**
+ * Monthly allowance per OpenCode Go model, by plan tier, taken from the
+ * official usage table at https://opencode.ai/zh/go.
+ *
+ * Reference only: it is displayed as "how expensive is this model", never used
+ * to derive spend. The usage API reports percentages and says nothing about
+ * which model an allowance belongs to, so converting a percentage into dollars
+ * would be guesswork.
+ */
+export const GO_MODEL_ALLOWANCE: Record<string, Record<PlanTier, number> | "free"> = {
+  "kimi-k3": { go: 15, plus: 60 },
+  "qwen3.8-max": { go: 15, plus: 60 },
+  "grok-4.7": { go: 15, plus: 60 },
+  "grok-4.6": { go: 15, plus: 60 },
+  "glm-5.3": { go: 15, plus: 120 },
+  "glm-5.2": { go: 60, plus: 180 },
+  "deepseek-v4-pro": { go: 15, plus: 60 },
+  "kimi-k2.7-code": { go: 60, plus: 180 },
+  "hy4-preview": { go: 30, plus: 120 },
+  "gpt-5.6-luna": { go: 15, plus: 60 },
+  "space-bunny": { go: 30, plus: 120 },
+  "minimax-m3": { go: 60, plus: 180 },
+  "mimo-v2.6-pro": { go: 15, plus: 60 },
+  "mimo-v2.5-pro": { go: 15, plus: 60 },
+  "minimax-m2.7": { go: 60, plus: 240 },
+  "claude-haiku-5-5": { go: 15, plus: 60 },
+  "gpt-6-luna": { go: 15, plus: 60 },
+  "qwen3.7-plus": { go: 60, plus: 180 },
+  hy3: { go: 60, plus: 240 },
+  "qwen3.8-flash": { go: 30, plus: 90 },
+  "glm-5.3-flash": { go: 60, plus: 180 },
+  "deepseek-v4-flash-vision-exp": { go: 15, plus: 60 },
+  "longcat-2.0": { go: 60, plus: 240 },
+  "deepseek-v4-flash": { go: 30, plus: 120 },
+  "mimo-v2.6-flash": { go: 60, plus: 120 },
+  "mimo-v2.5": { go: 60, plus: 120 },
+  "deepseek-v4.1-flash": { go: 80, plus: 160 },
+  "muse-spark-1.3-contributor": { go: 60, plus: 120 },
+  "muse-spark-1.2-contributor": { go: 60, plus: 120 },
+  "longcat-2.5-preview-free": "free",
+  "step-5-preview-free": "free",
+}
+
+/** Allowance of an OpenCode Go model, or undefined when it is not in the table. */
+export function modelAllowance(modelID: string | undefined): Record<PlanTier, number> | "free" | undefined {
+  if (!modelID) return undefined
+  return GO_MODEL_ALLOWANCE[modelID]
 }
 
 const WINDOW_LABEL: Record<WindowKind, string> = {
@@ -223,8 +276,11 @@ export function isTransient(error: unknown): boolean {
 
 /**
  * Fetch the three usage windows for a provider.
- * OpenCode Go reports percentages and we map them onto its $12/$30/$60 budgets.
- * ClinePass reports percentages only, so no dollar amount is shown.
+ *
+ * OpenCode Go reports percentages only; the per-model dollar allowances on the
+ * pricing page are reference information and are never converted into "spend".
+ * ClinePass reports percentages plus a plan document whose caps ARE real
+ * dollars, so its windows carry a limit and the panel can show used / limit.
  */
 export async function fetchUsage(config: ProviderConfig, key: string, timeoutMs = 10000): Promise<UsageWindow[]> {
   const url = config.baseUrl.replace(/\/$/, "") + config.path
@@ -255,7 +311,7 @@ export async function fetchUsage(config: ProviderConfig, key: string, timeoutMs 
     const src = sources[kind]
     if (!src) continue
     const status = typeof src.status === "string" ? src.status : undefined
-    windows.push(buildWindow(kind, Number(src.percent) || 0, toMs(src.resetsAt), config.limits, status))
+    windows.push(buildWindow(kind, Number(src.percent) || 0, toMs(src.resetsAt), undefined, status))
   }
   if (windows.length === 0) throw new Error("usage API returned an unexpected shape")
   return windows

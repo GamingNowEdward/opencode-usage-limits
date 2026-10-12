@@ -50,7 +50,8 @@ usage-limits/
 | Partial readings | Fewer than `WINDOW_COUNT` windows renders `partial data · N/3` instead of silently dropping rows |
 | ClinePass caps | Read live from `/users/me/plan` (`inferenceCapThreshold`); cached for 6h; never fails the usage fetch |
 | Cap unit | Caps and `costUsd` share a unit: **1 unit = 1e-8 USD** (`CLINE_CAP_UNIT_USD`), calibrated against live data |
-| Limit overrides | `options.limits.<providerID>` overrides built-in budgets (OpenCode Go) and is the fallback when a ClinePass plan read fails |
+| OpenCode Go allowance | Per-model monthly allowances live in `GO_MODEL_ALLOWANCE` (from the official table at opencode.ai/zh/go). Shown as a **reference line only** — never converted into spend: the usage API reports percentages with no model context, and a mixed-model month does not map onto any single model's figure |
+| Limit overrides | `options.limits.<providerID>` is only a fallback for ClinePass when the plan read fails; OpenCode Go no longer takes dollar budgets |
 | Credentials | `extractKey` accepts one credential object or an array (multiple accounts); the first usable key wins |
 | Transient failures | 429 / 5xx / network failures back off (double, capped at 5 min) and show `retry in Ns`; auth and shape errors do not |
 | Freshness | The title row's right cell stays blank while data is fresh; the age (`2m`) appears in the warning colour only once the reading is older than 2.5 polling intervals (it shares the fixed-width cell with the spinner) |

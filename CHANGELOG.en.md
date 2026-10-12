@@ -6,6 +6,27 @@ All notable changes to `usage-limits` are documented here. The format is based o
 
 [简体中文](./CHANGELOG.md) · [English](./CHANGELOG.en.md)
 
+## 0.3.0 - 2026-10-13
+
+### Changed
+
+- **OpenCode Go now shows percentages only.** The official allowances are **per model** ($15–$80, plus a
+  Go Plus tier), so the old flat `$12/$30/$60` no longer holds. Measurement also shows the percentage
+  cannot be turned into dollars: 84% monthly corresponded to $49.27 of actual 30-day spend, implying a
+  ~$59 allowance rather than $80. The `used / limit` row is therefore gone for Go.
+- **New allowance reference line** at the bottom of the panel, showing the selected model and its
+  allowance (`deepseek-v4.1-flash  $80/$160`) so you can tell how expensive the model is. The built-in
+  table covers the official **31 models**; unknown models show `—` and free models show `∞`. This line is
+  purely informational and takes no part in any calculation.
+- The `limits` option is narrowed to a **ClinePass-only fallback** (used when the plan read fails);
+  OpenCode Go no longer accepts dollar budgets.
+- **ClinePass is unchanged**: caps are still read live from `/users/me/plan` and `used / limit` stays accurate.
+
+### Fixed
+
+- `formatUsd` threw `Cannot read properties of undefined` when a window had no limit; the amount text is
+  now computed safely instead of relying on a `<Show>` guard to prevent evaluation.
+
 ## 0.2.1 - 2026-10-06
 
 ### Docs

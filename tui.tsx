@@ -9,6 +9,7 @@ import {
   formatUsd,
   isTransient,
   isWindowLimited,
+  modelAllowance,
   resetText,
   resolveKey,
   resolveProvider,
@@ -72,12 +73,18 @@ function ProgressBar(props: { percent: number; color: any; track: any }) {
 function WindowRow(props: { window: UsageWindow; palette: Palette; now: number }) {
   const pct = () => clampPercent(props.window.percent)
   const color = () => severityColor(props.palette, props.window)
-  const used = () => usedUsd(props.window)
-  const hasAmount = () => used() != null && props.window.limit != null
   const limited = () => isWindowLimited(props.window)
   // Memoised so the ticking clock only writes to the DOM when the rendered text
   // actually changes (Solid memos compare with ===).
   const resetLabel = createMemo(() => `↻ ${resetText(props.window.resetsAt, props.now)}`)
+  // Only providers with a real dollar cap (ClinePass) have one; computing this
+  // here keeps the Show guard from being the only thing preventing a crash on
+  // an undefined amount.
+  const amountText = createMemo(() => {
+    const used = usedUsd(props.window)
+    if (used == null || props.window.limit == null) return ""
+    return `${formatUsd(used)} / ${formatUsd(props.window.limit)}`
+  })
 
   return (
     <box flexDirection="column" width="100%" marginTop={1}>
@@ -94,8 +101,8 @@ function WindowRow(props: { window: UsageWindow; palette: Palette; now: number }
       <box flexDirection="row" width="100%">
         <text fg={props.palette.muted}>{resetLabel()}</text>
         <box flexGrow={1} />
-        <Show when={hasAmount()}>
-          <text fg={props.palette.muted}>{`${formatUsd(used() as number)} / ${formatUsd(props.window.limit as number)}`}</text>
+        <Show when={amountText() !== ""}>
+          <text fg={props.palette.muted}>{amountText()}</text>
         </Show>
       </box>
     </box>
@@ -106,9 +113,20 @@ function UsagePanel(props: { context: any; panel: any; toggle: () => void }) {
   const ctx = props.context
   const palette = createMemo<Palette>(() => readPalette(ctx.theme))
   const providerID = createMemo<string | undefined>(() => ctx.ui.model.current()?.providerID)
+  const modelID = createMemo<string | undefined>(() => ctx.ui.model.current()?.modelID)
   const config = createMemo(() => {
     const id = providerID()
     return id ? resolveProvider(id, ctx.options) : undefined
+  })
+
+  // How expensive the selected model is, shown as a reference line under the
+  // windows. Purely informational: the usage API reports percentages only.
+  const allowanceText = createMemo(() => {
+    if (providerID() !== "opencode-go") return ""
+    const allowance = modelAllowance(modelID())
+    if (allowance === "free") return "∞"
+    if (!allowance) return "—"
+    return `$${allowance.go}/$${allowance.plus}`
   })
 
   const [windows, setWindows] = createSignal<UsageWindow[]>([])
@@ -257,6 +275,14 @@ function UsagePanel(props: { context: any; panel: any; toggle: () => void }) {
               <text fg={palette().warn}>{`partial data · ${windows().length}/${WINDOW_COUNT} windows`}</text>
             </Show>
             <Index each={windows()}>{(w) => <WindowRow window={w()} palette={palette()} now={now()} />}</Index>
+            <Show when={allowanceText() !== ""}>
+              <box flexDirection="row" width="100%" marginTop={1}>
+                <box flexGrow={1}>
+                  <text fg={palette().text}>{modelID() ?? ""}</text>
+                </box>
+                <text fg={palette().text}>{allowanceText()}</text>
+              </box>
+            </Show>
           </Show>
         </box>
       )}

@@ -33,7 +33,9 @@ Monthly                         60%
 - **Two usage sources**: OpenCode Go and ClinePass, switched automatically by the current model.
 - **Three windows**: rolling 5 hours / weekly / monthly, with percentage, bar and reset countdown.
 - **Green / yellow / red**: < 50% green, 50–79% yellow, ≥ 80% red (thresholds live in `core.ts`).
-- **Spend display**: OpenCode Go shows `used / limit` ($12 / $30 / $60); ClinePass reads its caps live from `/users/me/plan`.
+- **Spend display**: ClinePass shows `used / limit` (caps read live from `/users/me/plan`, $10 / $25 / $50);
+  OpenCode Go shows percentages only, with the selected model's allowance (e.g. `$80/$160`) noted at the bottom
+  as a reference.
 - **Collapsible**: click the title row to collapse to a single line; the state is persisted.
 - **Unobtrusive**: nothing is rendered for any other provider, so it never takes up space.
 - **Rate-limit backoff**: 429 / 5xx / network failures back off exponentially (capped at 5 minutes) and show `retry in Ns`.
@@ -45,7 +47,7 @@ Monthly                         60%
 
 | Provider ID | Name | Usage endpoint | Spend shown |
 | --- | --- | --- | --- |
-| `opencode-go` | [OpenCode Go](https://opencode.ai/docs/go) | `GET https://opencode.ai/zen/go/v1/usage` | Yes ($12 / $30 / $60) |
+| `opencode-go` | [OpenCode Go](https://opencode.ai/zh/go) | `GET https://opencode.ai/zen/go/v1/usage` | No (percentages only; the model's allowance is noted at the bottom) |
 | `cline-pass` | [ClinePass](https://docs.cline.bot/getting-started/clinepass) | `GET https://api.cline.bot/api/v1/users/me/plan/usage-limits` | Yes (plan caps read live from `/users/me/plan`) |
 
 > Cline's public documentation is at [Cline API](https://docs.cline.bot/api/overview).
@@ -99,7 +101,7 @@ directly, and they stay active even when the CLI is connected to a remote server
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `refreshMs` | number | `30000` | Polling interval in milliseconds |
-| `limits` | object | — | Overrides the built-in budgets, e.g. `{ "opencode-go": { "monthly": 100 } }` |
+| `limits` | object | — | ClinePass fallback only, used when the plan read fails, e.g. `{ "cline-pass": { "hour5": 10, "weekly": 25, "monthly": 50 } }` |
 
 Thresholds and colours live in the source: `WARN_AT` / `DANGER_AT` in `core.ts`, `readPalette` in `tui.tsx`.
 
