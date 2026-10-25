@@ -17,15 +17,17 @@ the percentage, a progress bar and the reset countdown for three rolling windows
 ▾ USAGE · OpenCode Go
 5 hours                          0%
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-↻ 5h                       $0.00 / $12.00
+↻ 5h
 
 Weekly                           1%
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-↻ 6d 4h                    $0.30 / $30.00
+↻ 6d 4h
 
 Monthly                         60%
 ███████████████████░░░░░░░░░░░░░░░░░
-↻ 7d 14h                  $36.00 / $60.00
+↻ 7d 14h
+
+deepseek-v4.1-flash         $80/$160
 ```
 
 ## Features
