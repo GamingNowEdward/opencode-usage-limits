@@ -22,7 +22,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # Required: lets the workflow create the GitHub Release for the tag.
+  contents: write
   # Required: lets the runner mint the OIDC token that npm exchanges for a
   # short-lived publish credential.
   id-token: write
@@ -61,3 +62,18 @@ jobs:
 
       - name: Publish
         run: npm publish
+
+      # Create the Release after a successful publish, never before. Existing
+      # Releases are left alone so hand-written notes are not overwritten.
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists, leaving it unchanged"
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes
+          fi

@@ -95,6 +95,10 @@ in the repository.
 
 3. `.github/workflows/publish.yml` checks the tag against `package.json`, then runs `npm publish`
    over OIDC. Provenance is generated automatically.
+4. After a successful publish the same workflow creates a GitHub Release for the tag with
+   `--generate-notes` (it leaves an existing Release untouched, so a manual one is never overwritten).
+   Edit the generated Release afterwards to add the bilingual summary from the CHANGELOG. The job
+   needs `contents: write` for this step.
 
 Manual publishing still works (`npm publish --otp=…`), but **granular access tokens with bypass-2FA
 no longer publish**; npm is retiring that path (target January 2027) in favour of trusted publishing.
