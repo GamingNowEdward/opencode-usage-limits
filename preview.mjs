@@ -3,18 +3,43 @@
 //   node preview.mjs                                  -> both providers
 //   node preview.mjs cline-pass                       -> one provider
 //   node preview.mjs opencode-go kimi-k3              -> pick the model shown
+import { homedir } from "node:os"
+import { join } from "node:path"
 import {
   PROVIDERS,
   clampPercent,
   fetchUsage,
   formatUsd,
   isWindowLimited,
+  keyFromCredentials,
   modelAllowance,
   resetText,
   resolveKey,
   usedUsd,
   windowSeverity,
 } from "./core.ts"
+
+/**
+ * Mirror the TUI: OpenCode v2 keeps credentials in its database, so read them
+ * from there before falling back to auth.json. `node:sqlite` is optional and
+ * failures silently fall through to the legacy store.
+ */
+async function keyFromDatabase(providerID) {
+  try {
+    const { DatabaseSync } = await import("node:sqlite")
+    const file = join(homedir(), ".local", "share", "opencode", "opencode.db")
+    const db = new DatabaseSync(file, { readOnly: true })
+    const rows = db.prepare("select integration_id, value, active from credential").all()
+    const entries = rows.map((row) => ({
+      integrationID: row.integration_id,
+      active: row.active === 1,
+      value: JSON.parse(row.value),
+    }))
+    return keyFromCredentials(entries, providerID)
+  } catch {
+    return undefined
+  }
+}
 
 const OUTER = 4 // leading indent inside the sidebar
 const CONTENT = 36 // usable content width (sidebar is ~40 cols)
@@ -66,7 +91,7 @@ function renderAllowance(modelID) {
 
 async function show(providerID, modelID) {
   const config = PROVIDERS[providerID]
-  const key = await resolveKey(providerID)
+  const key = await resolveKey(providerID, keyFromDatabase)
   if (!key) {
     console.log(`\n${" ".repeat(OUTER)}${BOLD}USAGE · ${config.title}${RESET}`)
     console.log(`${" ".repeat(OUTER + 2)}${"\x1b[31m"}API key not found${RESET}`)
