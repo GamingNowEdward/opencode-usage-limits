@@ -6,7 +6,7 @@ All notable changes to `usage-limits` are documented here. The format is based o
 
 [简体中文](./CHANGELOG.md) · [English](./CHANGELOG.en.md)
 
-## Unreleased
+## 0.3.1 - 2026-10-26
 
 ### Fixed
 
