@@ -52,13 +52,14 @@ usage-limits/
 | Cap unit | Caps and `costUsd` share a unit: **1 unit = 1e-8 USD** (`CLINE_CAP_UNIT_USD`), calibrated against live data |
 | OpenCode Go allowance | Per-model monthly allowances live in `GO_MODEL_ALLOWANCE` (from the official table at opencode.ai/zh/go). Shown as a **reference line only** — never converted into spend: the usage API reports percentages with no model context, and a mixed-model month does not map onto any single model's figure |
 | Limit overrides | `options.limits.<providerID>` is only a fallback for ClinePass when the plan read fails; OpenCode Go no longer takes dollar budgets |
-| Credentials | `extractKey` accepts one credential object or an array (multiple accounts); the first usable key wins |
+| Credentials | `extractKey` accepts one credential object or an array (multiple accounts); `keyFromCredentials` picks the active entry for a provider and falls back to the first match |
 | Transient failures | 429 / 5xx / network failures back off (double, capped at 5 min) and show `retry in Ns`; auth and shape errors do not |
 | Freshness | The title row's right cell stays blank while data is fresh; the age (`2m`) appears in the warning colour only once the reading is older than 2.5 polling intervals (it shares the fixed-width cell with the spinner) |
 | Progress track | The unfilled colour uses `theme.border.base` (`background.raised.base` matches the panel and disappears) |
 | Collapse | Persisted via `context.storage.store("usage-limits.panel")`; title row `onMouseUp` + a command-palette command |
 | Countdown | `↻ ` followed by the time, with a single space after the glyph |
-| API key | Read live from `auth.json`; **never** write it to the repo or logs |
+| API key | Read live through `context.client.credential.list()` (v2 keeps credentials in `opencode.db`), with `auth.json` as a fallback; **never** write it to the repo or logs |
+| Host usage API | If `context.client.experimental.usage.limits` exists, OpenCode Go uses it and needs no key; older hosts fall back to the Zen endpoint |
 
 ## Commands
 

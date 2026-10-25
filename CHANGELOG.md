@@ -4,6 +4,17 @@
 
 [简体中文](./CHANGELOG.md) · [English](./CHANGELOG.en.md)
 
+## 未发布
+
+### 修复
+
+- **OpenCode v2.1+ 凭据迁移导致面板失效**：v2 把登录凭据从 `auth.json` 迁移到 `opencode.db`
+  的 `credential` 表，插件仍只读 `auth.json`，因此选中 OpenCode Go 时固定显示
+  `API key not found`。现在优先通过 `context.client.credential.list()` 读取，`auth.json` 仅作兜底。
+- **优先使用宿主用量接口**：宿主提供 `GET /api/experimental/usage/limits` 时，OpenCode Go 直接使用
+  该接口（无需密钥）；旧版本自动回退到 Zen 用量接口。
+- `preview.mjs` 同步支持从 `opencode.db` 读取凭据，便于在不启动 TUI 的情况下验证。
+
 ## 0.3.0 - 2026-10-13
 
 ### 变更

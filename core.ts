@@ -132,7 +132,7 @@ function authPaths(): string[] {
 }
 
 /**
- * Pull an API key out of an auth-store entry. The store may hold a single
+ * Pull an API key out of a credential entry. An entry may hold a single
  * credential object, or an array of them when several accounts/connections
  * exist for one provider; in that case the first usable key wins.
  */
@@ -153,11 +153,46 @@ function extractKey(entry: any): string | undefined {
   return undefined
 }
 
-/** Resolve the provider API key from the env or OpenCode's auth store. */
-export async function resolveKey(providerID: string): Promise<string | undefined> {
+/**
+ * Pick the credential belonging to `providerID` out of the list returned by
+ * OpenCode's `credential.list()` API. OpenCode v2 stores credentials in its
+ * database rather than in `auth.json`, so this is the authoritative source.
+ * The active credential wins; otherwise the first match is used.
+ */
+export function keyFromCredentials(entries: unknown, providerID: string): string | undefined {
+  const list = Array.isArray(entries)
+    ? entries
+    : Array.isArray((entries as any)?.data)
+      ? (entries as any).data
+      : []
+  const matches = list.filter((entry: any) => entry?.integrationID === providerID)
+  const preferred = matches.find((entry: any) => entry?.active === true) ?? matches[0]
+  return extractKey(preferred?.value)
+}
+
+/** Reads a provider key through the host's OpenCode client. */
+export type KeyResolver = (providerID: string) => Promise<string | undefined>
+
+/**
+ * Resolve the provider API key from the env, the host credential store, or
+ * `auth.json`. The host store comes first because OpenCode v2 keeps credentials
+ * in its database; `auth.json` remains as a fallback for older installs and for
+ * the offline preview script.
+ */
+export async function resolveKey(providerID: string, fromHost?: KeyResolver): Promise<string | undefined> {
   const envName = `${providerID.toUpperCase().replace(/-/g, "_")}_API_KEY`
   const fromEnv = process.env[envName]
   if (fromEnv) return fromEnv
+
+  if (fromHost) {
+    try {
+      const key = await fromHost(providerID)
+      if (key) return key
+    } catch {
+      // Host credential API unavailable (older OpenCode, remote server): fall
+      // through to the legacy auth store.
+    }
+  }
 
   for (const path of authPaths()) {
     try {
@@ -175,6 +210,9 @@ export async function resolveKey(providerID: string): Promise<string | undefined
 // ---- API fetching -------------------------------------------------------
 
 function toMs(value: unknown): number | null {
+  // Provider endpoints return ISO strings; OpenCode's own usage API returns
+  // epoch milliseconds.
+  if (typeof value === "number") return Number.isFinite(value) ? value : null
   if (typeof value !== "string") return null
   const ms = new Date(value).getTime()
   return Number.isFinite(ms) ? ms : null
@@ -315,6 +353,37 @@ export async function fetchUsage(config: ProviderConfig, key: string, timeoutMs 
   }
   if (windows.length === 0) throw new Error("usage API returned an unexpected shape")
   return windows
+}
+
+/**
+ * Map the OpenCode host's own usage payload (`GET /api/experimental/usage/limits`)
+ * onto the panel's windows. Newer OpenCode releases expose the Go meters there,
+ * which removes the need for a key entirely; older ones do not, so the caller
+ * falls back to the provider endpoint above.
+ */
+export function goWindowsFromLimits(info: any): UsageWindow[] | undefined {
+  const go = info?.go ?? info?.data?.go
+  if (!go) return undefined
+  const meters: Record<WindowKind, any> = {
+    hour5: go.rolling,
+    weekly: go.weekly,
+    monthly: go.monthly,
+  }
+  const windows: UsageWindow[] = []
+  for (const kind of WINDOW_ORDER) {
+    const meter = meters[kind]
+    if (!meter) continue
+    windows.push(
+      buildWindow(
+        kind,
+        Number(meter.percent) || 0,
+        toMs(meter.resetsAt),
+        undefined,
+        meter.limited === true ? "limited" : "ok",
+      ),
+    )
+  }
+  return windows.length > 0 ? windows : undefined
 }
 
 // ---- Formatting ---------------------------------------------------------

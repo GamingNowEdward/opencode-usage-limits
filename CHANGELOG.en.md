@@ -6,6 +6,18 @@ All notable changes to `usage-limits` are documented here. The format is based o
 
 [简体中文](./CHANGELOG.md) · [English](./CHANGELOG.en.md)
 
+## Unreleased
+
+### Fixed
+
+- **The panel broke once OpenCode v2.1 moved credentials**: v2 migrated login credentials from
+  `auth.json` to the `credential` table in `opencode.db`, but the plugin still read `auth.json`, so
+  selecting OpenCode Go always showed `API key not found`. Keys are now read through
+  `context.client.credential.list()`, with `auth.json` as a fallback only.
+- **Prefer the host usage endpoint**: when the host exposes `GET /api/experimental/usage/limits`,
+  OpenCode Go uses that payload directly (no key at all); older releases fall back to the Zen endpoint.
+- `preview.mjs` now reads credentials from `opencode.db` too, so the panel can be verified without the TUI.
+
 ## 0.3.0 - 2026-10-13
 
 ### Changed

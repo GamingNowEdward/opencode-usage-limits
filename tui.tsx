@@ -7,8 +7,10 @@ import {
   clampPercent,
   fetchUsage,
   formatUsd,
+  goWindowsFromLimits,
   isTransient,
   isWindowLimited,
+  keyFromCredentials,
   modelAllowance,
   resetText,
   resolveKey,
@@ -139,6 +141,36 @@ function UsagePanel(props: { context: any; panel: any; toggle: () => void }) {
   const baseMs = Number(props.context?.options?.refreshMs) || REFRESH_MS
   let pollMs = baseMs
 
+  // OpenCode v2 keeps credentials in its database, so read them through the
+  // host API first and only fall back to auth.json. The list is briefly cached:
+  // polling runs every 30s and a key rotation need not be picked up instantly.
+  let credentialCache: { at: number; entries: unknown } | undefined
+  const readCredentials = async () => {
+    const client = ctx.client as any
+    if (typeof client?.credential?.list !== "function") return undefined
+    if (credentialCache && Date.now() - credentialCache.at < 60_000) return credentialCache.entries
+    const entries = await client.credential.list()
+    credentialCache = { at: Date.now(), entries }
+    return entries
+  }
+  const keyFromHost = async (id: string) => keyFromCredentials(await readCredentials(), id)
+
+  // Newer OpenCode releases expose the Go meters themselves. Use them when the
+  // host has the endpoint, so this provider needs no key at all; older releases
+  // return undefined and fall back to the provider endpoint below.
+  const goFromHost = async (): Promise<UsageWindow[] | undefined> => {
+    const client = ctx.client as any
+    const limits = client?.experimental?.usage?.limits
+    if (typeof limits !== "function") return undefined
+    try {
+      const location = ctx.location ?? ctx.data?.location?.default?.()
+      const result = await limits.call(client.experimental.usage, location ? { location } : undefined)
+      return goWindowsFromLimits(result)
+    } catch {
+      return undefined
+    }
+  }
+
   // Guard per provider: if the user switches providers while a request is
   // still in flight, the new provider's request must fire immediately instead
   // of waiting for the next poll. Stale responses are dropped by the
@@ -150,14 +182,18 @@ function UsagePanel(props: { context: any; panel: any; toggle: () => void }) {
     inflight.add(cfg.id)
     setLoading(true)
     try {
-      const key = await resolveKey(cfg.id)
-      if (!key) {
-        setWindows([])
-        setError("API key not found")
-        setNextRetryAt(undefined)
-        return
+      let next = cfg.id === "opencode-go" ? await goFromHost() : undefined
+      if (!next) {
+        const key = await resolveKey(cfg.id, keyFromHost)
+        if (!key) {
+          setWindows([])
+          setError("API key not found")
+          setNextRetryAt(undefined)
+          pollMs = baseMs
+          return
+        }
+        next = await fetchUsage(cfg, key)
       }
-      const next = await fetchUsage(cfg, key)
       if (config()?.id === cfg.id) {
         setWindows(next)
         setError("")
